@@ -12,10 +12,7 @@ import {
 import { Button } from 'react-native-elements';
 
 // Import from owner project
-import { 
-    read_all_games,
-    delete_game
-} from '../api/api';
+import firebaseDB from '../firebase/firebase';
 
 import Card_UI from '../UI/Card/Card_UI';
 import Loading from '../UI/Loading/Loading';
@@ -45,36 +42,22 @@ const Home = (props) => {
         setShowModal(false);
     }
 
-    // Delete function 
+    // Delete function
     const deleteGame = (id) => {
-        fetch(delete_game + id, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(resp => resp.json())
-        .then(game => {
-            props.navigation.push('Tab');
-            setShowModal(false);
-        })
-        .catch(() => {
-            console.log("Server not found");    // For checking. Not alerting on mobile screen
-        })
-    };
-    
-    // Fetching data 
+        firebaseDB.child("games/g" + id).remove();
+        setShowModal(false);
+        props.navigation.push('Tab');
+    }
+
+    // Fetching data
     useEffect(() => {
-        fetch(read_all_games, {
-            method: 'GET'
-        })
-        .then(resp => resp.json())
-        .then(game => {
-            setData(game);
+        firebaseDB.child("games").on("value", snapshot => {
+            const games_list = [];
+            snapshot.forEach(child => {
+                games_list.push(child.val());
+            });
+            setData(games_list);
             setIsLoading(true);
-        })
-        .catch(() => {
-            console.log("Server not found");    // For checking. Not alerting on mobile screen
         })
     }, []);
 

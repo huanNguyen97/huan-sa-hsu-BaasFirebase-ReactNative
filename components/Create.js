@@ -14,7 +14,16 @@ import {
 } from 'react-native-elements';
 
 // Import owner
-import { create_game } from '../api/api';
+import firebaseDB from '../firebase/firebase';
+
+const initialState = {
+    id: "",
+    name: "",
+    category: "",
+    brand: "",
+    year_released: "",
+    price: ""
+};
 
 // Component part 
 // ---------------------------------------------------------------
@@ -22,6 +31,8 @@ import { create_game } from '../api/api';
 // Main content
 const Create = (props) => {
     // Set data default values
+    const [state, setState] = useState(initialState);
+
     const [name, setName] = useState();
     const [category, setCategory] = useState();
     const [brand, setBrand] = useState();
@@ -30,28 +41,36 @@ const Create = (props) => {
 
     // Create game function
     const createGame = () => {
-        fetch(create_game, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({
-                id: null,     // Just only id cannot edit.
-                name: name,
-                category: category,
-                brand: brand,
-                year_released: year_released,
-                price: price
+        if (!name || !category || !brand || !year_released || !price) {
+            console.log("Some things was nil");     // Just for testing
+        } else {
+            // Add new data
+            state.name = name;
+            state.category = category;
+            state.brand = brand;
+            state.year_released = year_released;
+            state.price = price;
+
+            // Push in firebase
+            firebaseDB.child("games").once("value", snapshot => {
+                // Take length of child "games"
+                let length = parseInt(snapshot.numChildren(), 10);
+
+                if (length === 0) {
+                    state.id = 1;
+                } else {
+                    state.id = length + 1;
+                }
+                
+            }).then(item => {
+                firebaseDB.child("games/g" + state.id).set(state);
+            }).catch(error => {
+                console.log(error);     // Just for testing
             })
-        })
-        .then(resp => resp.json())
-        .then(game => {
-            props.navigation.push('Tab');
-        })
-        .catch(() => {
-            console.log("Server not found");    // For checking. Not alerting on mobile screen
-        })
-    }
+        }
+
+        props.navigation.push('Tab');
+    };
 
     // Render template
     return (

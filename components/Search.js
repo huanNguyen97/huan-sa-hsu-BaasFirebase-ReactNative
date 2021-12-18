@@ -16,6 +16,7 @@ import {
 
 // Import owner
 import { search_games } from '../api/api';
+import firebaseDB from '../firebase/firebase';
 
 import Card_UI from '../UI/Card/Card_UI';
 import Loading from '../UI/Loading/Loading';
@@ -32,26 +33,42 @@ const Search = (props) => {
     // Use this for deleting
     const [foundId, setFoundId] = useState();
 
+    // // Fetching data 
+    // const searchGameHandle = () => {
+    //     fetch(search_games, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json' 
+    //         },
+    //         body: JSON.stringify({
+    //             search_text: searchText
+    //         })
+    //     })
+    //     .then(resp => resp.json())
+    //     .then(game => {
+    //         setData(game);
+    //         console.log(game);
+    //     })
+    //     .catch(() => {
+    //         console.log("Server not found");    // For checking. Not alerting on mobile screen
+    //     })
+    // }
+
     // Fetching data 
     const searchGameHandle = () => {
-        fetch(search_games, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({
-                search_text: searchText
+        firebaseDB.child("games").once("value", snapshot => {
+            console.log(searchText.toLowerCase());
+            const games_list = [];
+
+            snapshot.forEach(child => {
+                const game = child.val().name;
+                if (game.toLowerCase().includes(searchText.toLowerCase())) {
+                    games_list.push(child.val())
+                }
             })
+            setData(games_list);
         })
-        .then(resp => resp.json())
-        .then(game => {
-            setData(game);
-            console.log(game);
-        })
-        .catch(() => {
-            console.log("Server not found");    // For checking. Not alerting on mobile screen
-        })
-    }
+    };
 
     // Show true
     const showModalHandle_True = (id) => {

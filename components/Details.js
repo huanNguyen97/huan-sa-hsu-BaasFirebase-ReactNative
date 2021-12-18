@@ -16,8 +16,8 @@ import {
 import { useRoute } from '@react-navigation/native';
 
 // Import from owner
-import { read_detail_game } from '../api/api';
 import Loading from '../UI/Loading/Loading';
+import firebaseDB from '../firebase/firebase';
 
 // Component part 
 // ---------------------------------------------------------------
@@ -32,18 +32,11 @@ const Details = () => {
 
     // Fetching data
     useEffect(() => {
-        fetch(read_detail_game + route.params.id, {
-            method: 'GET'
-        })
-        .then(resp => resp.json())
-        .then(game_details => {
-            setData(game_details);
+        firebaseDB.child("games/g" + route.params.id).once("value", snapshot => {
+            setData(snapshot.val());
             setIsLoading(true);
         })
-        .catch(() => {
-            console.log("Server not found");     // For checking. Not alerting on mobile screen
-        })
-    }, []);
+    }, [])
 
     // Details of game
     const Game_Details = (sub_props) => {
